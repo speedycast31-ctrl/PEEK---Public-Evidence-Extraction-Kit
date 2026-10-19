@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "PEEK",
+  "version": "0.1.0",
+  "identifier": "io.github.speedycast.peek",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "PEEK — Public Evidence Extraction Kit",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 960,
+        "minHeight": 640,
+        "center": true
+      }
+    ],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUxQzU1MDAyMjgwNDg5RTcKUldUbmlRUW9BbERGNGJRbUxSTE5sdlNNZ09uUHQza2pSRzB6SjUzZzViMXVRQ3JtMTdKbEVYTlAK",
+      "endpoints": [
+        "https://github.com/speedycast31-ctrl/PEEK---Public-Evidence-Extraction-Kit/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}
