@@ -1,0 +1,50 @@
+name: Release
+
+# Every push to main becomes a signed release the installed app
+# auto-updates to. Also triggerable by hand from the Actions tab.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      # The updater compares semver, so every run gets a strictly newer
+      # version (0.<run_number>.0) — each push is always an "upgrade".
+      - name: Bump build version for this run
+        run: |
+          V="0.${{ github.run_number }}.0"
+          jq --arg v "$V" '.version = $v' src-tauri/tauri.conf.json > tmp.conf && mv tmp.conf src-tauri/tauri.conf.json
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: .
+          tagName: v__VERSION__
+          releaseName: 'PEEK v__VERSION__'
+          releaseBody: 'Automatic build from main. The installed app updates itself to this version.'
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
