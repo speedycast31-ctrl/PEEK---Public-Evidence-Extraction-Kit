@@ -1,0 +1,172 @@
+/**
+ * PEEK application shell styles — Cybercore theme ("Field Terminal").
+ *
+ * The full system is documented in `design.md`. Cream stays the primary
+ * surface; the cyber layer — phosphor glow, scanlines, grain, vignette — is
+ * painted *onto* the cream, never the reverse. Grid paint lives in
+ * `src/config/workspace.ts` because it is stroked with the 2D context.
+ */
+
+:root {
+  /* Cream ground — the primary surface (unchanged from the paper era). */
+  --paper: #faf5ec;
+  --paper-raised: #fffdf8;
+  --paper-dim: #f1ead9;
+
+  /* Warm ink ladder. */
+  --ink: #26201a;
+  --ink-muted: #8a7761;
+  --ink-faint: #b9a88f;
+
+  /* Amber phosphor — brand glyph, emphasis, live values. */
+  --accent: #c2560f;
+  --accent-soft: #e08a45;
+  --accent-glow: rgb(194 86 15 / 13%);
+
+  /* Phosphor green — live status ONLY (LED, LIVE/SYS states). */
+  --signal: #2e7d54;
+  --signal-glow: rgb(46 125 84 / 35%);
+
+  --hairline: #e4d7c1;
+
+  /* The project font: Orbitron Variable (SIL OFL) carries EVERYTHING —
+     wordmark, HUD, readouts and future body copy (design.md §4). JetBrains
+     Mono Variable stays as the self-hosted fallback for glyphs Orbitron
+     lacks (e.g. the · separator), then system monos. */
+  --font:
+    'Orbitron Variable', 'JetBrains Mono Variable', ui-monospace,
+    SFMono-Regular, Menlo, Consolas, monospace;
+
+  color-scheme: light;
+  font: 14px/1.5 var(--font);
+  color: var(--ink);
+  background: var(--paper);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+/* Shared status motion — the only animations in the product (design.md §6).
+   Both are status semantics: a breathing LED and a terminal caret. */
+@keyframes hud-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes hud-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* `isolation` keeps the overlay blend modes from reaching outside the shell
+   and gives every chrome layer a predictable stacking context. */
+.app-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  isolation: isolate;
+}
+
+.workspace-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Phosphor glow: an amber pool in the top-left (the powered corner, where the
+   wordmark sits) and a faint green haze bottom-right — the two accents of the
+   palette "switched on". Pure decoration, never interactive. */
+.app-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      110% 85% at 0% 0%,
+      rgb(194 86 15 / 13%),
+      rgb(194 86 15 / 0%) 55%
+    ),
+    radial-gradient(
+      80% 60% at 100% 100%,
+      rgb(46 125 84 / 7%),
+      rgb(46 125 84 / 0%) 60%
+    );
+}
+
+/* CRT + print in one multiply layer, stacked bottom-to-top:
+   vignette (screen depth) → paper grain (printed facing) → scanlines (CRT).
+   The layer opacity weights the whole stack; per-effect strength is baked
+   into each paint's alpha. The 187px grain tile is prime-ish and NOT a
+   multiple of the 20px/100px grid steps, so noise never phases with the grid. */
+.app-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: repeating-linear-gradient(
+      to bottom,
+      rgb(38 32 26 / 5%) 0px,
+      rgb(38 32 26 / 5%) 1px,
+      rgb(38 32 26 / 0%) 1px,
+      rgb(38 32 26 / 0%) 3px
+    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='187' height='187'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='187' height='187' filter='url(%23g)'/%3E%3C/svg%3E"),
+    radial-gradient(
+      130% 130% at 50% 42%,
+      rgb(38 32 26 / 0%) 62%,
+      rgb(38 32 26 / 10%) 100%
+    );
+  background-size:
+    auto,
+    187px 187px,
+    auto;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  /* The whole CRT/print overlay is translucency by nature — drop it. */
+  .app-shell::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
